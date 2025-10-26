@@ -1,52 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chuva Residual</title>
-</head>
-<style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    canvas {
-      border: 3px solid #2e7d32; /* verde */
-      background-color: #e0f7fa;
-    }
-    </style>
-
-
-<body>
-      <canvas id="gameCanvas" width="600" height="400">
-    O teu navegador não suporta Canvas
-</body>
-
-<script>
-
+// === CONFIGURAÇÃO INICIAL ===
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 const W = canvas.width;
 const H = canvas.height;
 
-// robô
+// === OBJETO ROBO ===
 let robo = {
   x: 50,          // posição inicial no eixo X
   y: H - 100,     // posição inicial no eixo Y
   w: 40,          // largura
   h: 60,          // altura
-  baseWidth: 60,  // largura da tampa por cima
-  speed: 2,       // velocidade do robô
-  color: "#1565c0" 
+  baseWidth: 60,  // largura da base (tampa)
+  speed: 4,       // velocidade de movimento
+  color: "#1565c0" // azul escuro
 };
 
+// === TECLAS ===
+let keys = {}; // objeto que vai guardar que teclas estão pressionadas
 
-let keys = {}; // responsável pelo movimento do robô com as setas do teclado
 document.addEventListener("keydown", (e) => {
   keys[e.key] = true; // marca a tecla como pressionada
 });
@@ -55,10 +27,8 @@ document.addEventListener("keyup", (e) => {
   keys[e.key] = false; // marca a tecla como solta
 });
 
-
+// === FUNÇÃO PARA ATUALIZAR O ROBO ===
 function updateRobo() {
-
-
   // mover para a esquerda
   if (keys["ArrowLeft"] && robo.x > 0) {
     robo.x -= robo.speed;
@@ -70,18 +40,18 @@ function updateRobo() {
   }
 }
 
-// como o robô é desenhado
+// === FUNÇÃO PARA DESENHAR O ROBO ===
 function drawRobo() {
   // corpo
   ctx.fillStyle = robo.color;
   ctx.fillRect(robo.x, robo.y, robo.w, robo.h);
 
-  // tampa por cima do robô
+  // base (tampa) — desenhada um pouco acima da cabeça
   ctx.fillStyle = "#90caf9"; // azul mais claro
   ctx.fillRect(robo.x - 10, robo.y - 10, robo.baseWidth, 10);
 }
 
-
+// === FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO ===
 function render() {
   // fundo
   ctx.fillStyle = "#b3e5fc";
@@ -103,8 +73,5 @@ function render() {
   requestAnimationFrame(render);
 }
 
+// iniciar o jogo
 render();
-
-</script>
-<script src="robot.js"></script>
-</html>
