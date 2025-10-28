@@ -1,110 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chuva Residual</title>
-</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chuva Residual</title>
 <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    canvas {
-      border: 3px solid #2e7d32; /* verde */
-      background-color: #e0f7fa;
-    }
-    </style>
-
+	body {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
+		margin: 0;
+	}
+	canvas {
+		border: 3px solid #2e7d32; /* verde */
+		background-color: #e0f7fa;
+	}
+</style>
+</head>
 
 <body>
-      <canvas id="gameCanvas" width="600" height="400">
-    O teu navegador não suporta Canvas
+	<canvas id="gameCanvas" width="600" height="400">O seu navegador não suporta Canvas.</canvas>
+
+	<!-- ficheiros JS -->
+	<script src="robot.js"></script>
+	<script src="ObjetoChuva.js"></script>
+
+	<script>
+		// parte principal
+		const canvas = document.getElementById("gameCanvas");
+		const ctx = canvas.getContext("2d");
+
+		const W = canvas.width;
+		const H = canvas.height;
+
+		const chuvaLista = [];
+		let spawnTimer = 0;
+
+		function criarLixo() {
+			const x = Math.random() * (W - 100);
+			const speed = 1 + Math.random() * 2;
+			const weight = 1 + Math.random() * 2;
+			const colors = ["#ffb300", "#ff7043", "#8e24aa"];
+			const color = colors[Math.floor(Math.random() * colors.length)];
+			chuvaLista.push(new ObjetoChuva(x, speed, weight, color));
+		}
+
+		function porNoLixo() {
+			const binX = W - 80;
+			const binY = H - 100;
+
+			if (robo.x + robo.w > binX && robo.x < binX + 60) {
+				for (const obj of chuvaLista) {
+					if (obj.onRobot) {
+						obj.onRobot = false;
+						obj.jumpingToBin = true;
+						obj.jumpProgress = 0;
+					}
+				}
+			}
+		}
+
+		function render() {
+			// fundo
+			ctx.fillStyle = "#b3e5fc";
+			ctx.fillRect(0, 0, W, H);
+
+			// chão
+			ctx.fillStyle = "#81c784";
+			ctx.fillRect(0, H - 40, W, 40);
+
+			// caixote de lixo
+			ctx.fillStyle = "#4caf50";
+			ctx.fillRect(W - 80, H - 100, 60, 60);
+
+			// spawn objects occasionally
+			spawnTimer++;
+			if (spawnTimer > 100) {
+				criarLixo();
+				spawnTimer = 0;
+			}
+
+			// mover e atualizar chuva
+			for (const obj of chuvaLista) {
+				obj.update(robo, W - 50, H - 100);
+				obj.draw(ctx);
+			}
+
+			// mais lixo, mais lento
+			const totalWeight = chuvaLista
+				.filter(o => o.onRobot)
+				.reduce((sum, o) => sum + o.weight, 0);
+			robo.speed = 6 / (1 + totalWeight * 0.075);
+
+			updateRobo(W);
+			drawRobo(ctx);
+			porNoLixo();
+
+			// remover lixos postos no lixo
+			for (let i = chuvaLista.length - 1; i >= 0; i--) {
+				if (chuvaLista[i].collected) chuvaLista.splice(i, 1);
+			}
+
+			requestAnimationFrame(render);
+		}
+
+		render();
+	</script>
 </body>
-
-<script>
-
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-const W = canvas.width;
-const H = canvas.height;
-
-// robô
-let robo = {
-  x: 50,          // posição inicial no eixo X
-  y: H - 100,     // posição inicial no eixo Y
-  w: 40,          // largura
-  h: 60,          // altura
-  baseWidth: 60,  // largura da tampa por cima
-  speed: 2,       // velocidade do robô
-  color: "#1565c0" 
-};
-
-
-let keys = {}; // responsável pelo movimento do robô com as setas do teclado
-document.addEventListener("keydown", (e) => {
-  keys[e.key] = true; // marca a tecla como pressionada
-});
-
-document.addEventListener("keyup", (e) => {
-  keys[e.key] = false; // marca a tecla como solta
-});
-
-
-function updateRobo() {
-
-
-  // mover para a esquerda
-  if (keys["ArrowLeft"] && robo.x > 0) {
-    robo.x -= robo.speed;
-  }
-
-  // mover para a direita
-  if (keys["ArrowRight"] && robo.x + robo.w < W) {
-    robo.x += robo.speed;
-  }
-}
-
-// como o robô é desenhado
-function drawRobo() {
-  // corpo
-  ctx.fillStyle = robo.color;
-  ctx.fillRect(robo.x, robo.y, robo.w, robo.h);
-
-  // tampa por cima do robô
-  ctx.fillStyle = "#90caf9"; // azul mais claro
-  ctx.fillRect(robo.x - 10, robo.y - 10, robo.baseWidth, 10);
-}
-
-
-function render() {
-  // fundo
-  ctx.fillStyle = "#b3e5fc";
-  ctx.fillRect(0, 0, W, H);
-
-  // chão
-  ctx.fillStyle = "#81c784";
-  ctx.fillRect(0, H - 40, W, 40);
-
-  // caixote de lixo
-  ctx.fillStyle = "#4caf50";
-  ctx.fillRect(W - 80, H - 100, 60, 60);
-
-  // atualizar e desenhar o robô
-  updateRobo();
-  drawRobo();
-
-  // loop da animação
-  requestAnimationFrame(render);
-}
-
-render();
-
-</script>
-<script src="robot.js"></script>
 </html>
