@@ -4,7 +4,7 @@ export class ObjetoChuva {
 		this.y = -20; // aparecer fora da tela
 		this.w = 20;
 		this.h = 20;
-		this.speed = speed;
+		this.speed = speed * 1.1;
 		this.weight = weight;
 		this.color = color;
 
@@ -39,7 +39,7 @@ export class ObjetoChuva {
 	collideRobot(robo) {
 		if (
 			this.y + this.h >= robo.y - 10 && // em cima da tampa ou mais baixo
-			this.y <= robo.y + robo.h && // acima do robo
+			this.y <= robo.y && // acima do robo
 			this.x + this.w > robo.x - 10 && // robo esta por baixo do lixo
 			this.x < robo.x - 10 + robo.baseWidth
 		) {

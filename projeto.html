@@ -83,6 +83,10 @@
 				spawnTimer = 0;
 			}
 
+			updateRobo(W);
+			drawRobo(ctx);
+			porNoLixo();
+
 			// atualizar e desenhar lixo
 			for (const obj of chuvaLista) {
 				obj.update(robo, W - 50, H - 100);
@@ -94,10 +98,6 @@
 				.filter(o => o.onRobot)
 				.reduce((sum, o) => sum + o.weight, 0);
 			robo.speed = 6 / (1 + totalWeight * 0.075);
-
-			updateRobo(W);
-			drawRobo(ctx);
-			porNoLixo();
 
 			// remover lixo posto no caixote
 			for (let i = chuvaLista.length - 1; i >= 0; i--) {
