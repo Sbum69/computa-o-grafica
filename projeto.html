@@ -22,11 +22,11 @@
 <body>
 	<canvas id="gameCanvas" width="600" height="400">O seu navegador não suporta Canvas.</canvas>
 
-	<!-- ficheiros JS -->
-	<script src="robot.js"></script>
-	<script src="ObjetoChuva.js"></script>
+	<script type="module">
+		// importar robo e lixos
+		import { robo, updateRobo, drawRobo } from "./robot.js";
+		import * as Lixos from "./lixos.js";
 
-	<script>
 		// parte principal
 		const canvas = document.getElementById("gameCanvas");
 		const ctx = canvas.getContext("2d");
@@ -34,16 +34,18 @@
 		const W = canvas.width;
 		const H = canvas.height;
 
+		// lixo
 		const chuvaLista = [];
 		let spawnTimer = 0;
 
 		function criarLixo() {
 			const x = Math.random() * (W - 100);
-			const speed = 1 + Math.random() * 2;
-			const weight = 1 + Math.random() * 2;
-			const colors = ["#ffb300", "#ff7043", "#8e24aa"];
-			const color = colors[Math.floor(Math.random() * colors.length)];
-			chuvaLista.push(new ObjetoChuva(x, speed, weight, color));
+
+			const tiposLixo = Object.values(Lixos);
+			const LixoClasse = tiposLixo[Math.floor(Math.random() * tiposLixo.length)];
+
+			const obj = new LixoClasse(x);
+			chuvaLista.push(obj);
 		}
 
 		function porNoLixo() {
@@ -74,20 +76,20 @@
 			ctx.fillStyle = "#4caf50";
 			ctx.fillRect(W - 80, H - 100, 60, 60);
 
-			// spawn objects occasionally
+			// cair lixo ocasionalmente
 			spawnTimer++;
 			if (spawnTimer > 100) {
 				criarLixo();
 				spawnTimer = 0;
 			}
 
-			// mover e atualizar chuva
+			// atualizar e desenhar lixo
 			for (const obj of chuvaLista) {
 				obj.update(robo, W - 50, H - 100);
 				obj.draw(ctx);
 			}
 
-			// mais lixo, mais lento
+			// quanto mais peso, mais lento o robô
 			const totalWeight = chuvaLista
 				.filter(o => o.onRobot)
 				.reduce((sum, o) => sum + o.weight, 0);
@@ -97,7 +99,7 @@
 			drawRobo(ctx);
 			porNoLixo();
 
-			// remover lixos postos no lixo
+			// remover lixo posto no caixote
 			for (let i = chuvaLista.length - 1; i >= 0; i--) {
 				if (chuvaLista[i].collected) chuvaLista.splice(i, 1);
 			}

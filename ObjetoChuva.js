@@ -1,4 +1,4 @@
-class ObjetoChuva {
+export class ObjetoChuva {
 	constructor(x, speed, weight, color) {
 		this.x = x;
 		this.y = -20; // aparecer fora da tela
@@ -17,34 +17,41 @@ class ObjetoChuva {
 		if (this.jumpingToBin) {
 			// saltito
 			this.jumpProgress += 0.05;
-			this.x = this.x + (binX - this.x) * 0.1;
-			this.y = this.y + (binY - this.y) * 0.1 - Math.sin(this.jumpProgress * Math.PI) * 5;
+			this.x += (binX - this.x) * 0.1;
+			this.y += (binY - this.y) * 0.1 - Math.sin(this.jumpProgress * Math.PI) * 5;
 
-			if (this.jumpProgress >= 1) {
-				this.collected = true; // remover
-			}
+			if (this.jumpProgress >= 1) this.collected = true;
 			return;
 		}
 
 		if (!this.onRobot) {
-			this.y += this.speed; // falling motion
-
-			// Collision with robot top
-			if (
-				this.y + this.h >= robo.y - 10 && // em cima da tampa ou mais baixo
-				this.y <= robo.y + robo.h && // acima do robo
-				this.x + this.w > robo.x - 10 && // robo esta por baixo do lixo
-				this.x < robo.x - 10 + robo.baseWidth
-			) {
-				this.onRobot = true;
-				this.y = robo.y - 10 - this.h; // ficar em cima
-			}
+			this.fall(); //para diferentes quedas
+			this.collideRobot(robo);
 		} else {
-			//movimento relativo da chuva
-			this.x = robo.x + (this.relativeX ?? (this.x - robo.x));
-			this.relativeX = this.x - robo.x;
-			this.y = robo.y - 10 - this.h;
+			this.followRobot(robo);
 		}
+	}
+
+	fall() {
+		this.y += this.speed; // normalmente diretamente para baixo
+	}
+
+	collideRobot(robo) {
+		if (
+			this.y + this.h >= robo.y - 10 && // em cima da tampa ou mais baixo
+			this.y <= robo.y + robo.h && // acima do robo
+			this.x + this.w > robo.x - 10 && // robo esta por baixo do lixo
+			this.x < robo.x - 10 + robo.baseWidth
+		) {
+			this.onRobot = true;
+			this.y = robo.y - 10 - this.h; // ficar em cima
+			this.relativeX = this.x - robo.x;
+		}
+	}
+
+	followRobot(robo) {
+		this.x = robo.x + this.relativeX;
+		this.y = robo.y - 10 - this.h;
 	}
 
 	draw(ctx) {

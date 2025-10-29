@@ -1,5 +1,5 @@
 // Definição do robô
-let robo = {
+export const robo = {
 	x: 50,
 	y: 300,
 	w: 40,
@@ -19,14 +19,14 @@ document.addEventListener("keyup", (e) => {
 	keys[e.key] = false;
 });
 
-function updateRobo(canvasWidth) {
+export function updateRobo(canvasWidth) {
 	if (keys["ArrowLeft"]) robo.x -= robo.speed;
 	if (keys["ArrowRight"]) robo.x += robo.speed;
 
 	robo.x = Math.min(Math.max(robo.x, 0), canvasWidth - robo.w);
 }
 
-function drawRobo(ctx) {
+export function drawRobo(ctx) {
 	// corpo
 	ctx.fillStyle = robo.color;
 	ctx.fillRect(robo.x, robo.y, robo.w, robo.h);
