@@ -1,17 +1,18 @@
 import { ObjetoChuva } from "./ObjetoChuva.js";
 
+
 export class Pilha extends ObjetoChuva {
-	constructor(x) {
-		super(x, 1.2, 0.25, "#6eff6eff");
+	constructor(x, roboBaseWidth) {
+		super(x, 1.2, 0.25, "#6eff6eff", "./lixos/pilha.png");
 	}
 }
 
 export class Papel extends ObjetoChuva {
 	constructor(x) {
-		super(x, 0.66, 0.8, "#ffee58"); // faster, lighter
+		super(x, 0.66, 0.8, "#ffee58", "./lixos/papel.png");
 		this.angle = Math.random() * Math.PI * 2;
-		this.amplitude = 30 + Math.random() * 20; // how far it swings
-		this.freq = 0.05 + Math.random() * 0.03;  // how fast it oscillates
+		this.amplitude = 30 + Math.random() * 20;
+		this.freq = 0.05 + Math.random() * 0.03;
 		this.startX = x;
 	}
 
@@ -24,12 +25,12 @@ export class Papel extends ObjetoChuva {
 
 export class Bola extends ObjetoChuva {
 	constructor(x) {
-		super(x, 1, 1, "#969696");
+		super(x, 1, 1, "#969696", "./lixos/bola.png");
 	}
 }
 
 export class Saco extends ObjetoChuva {
 	constructor(x) {
-		super(x, 0.5, 2.5, "#0d0030ff");
+		super(x, 0.5, 2.5, "#0d0030ff", "./lixos/saco.png");
 	}
 }

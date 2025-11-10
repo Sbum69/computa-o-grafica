@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chuva Residual</title>
 <style>
 	body {
@@ -11,10 +11,22 @@
 		align-items: center;
 		height: 100vh;
 		margin: 0;
+		background-color: #bde0fe;
 	}
+
 	canvas {
-		border: 3px solid #2e7d32; /* verde */
+		border: 3px solid #2e7d32;
 		background-color: #e0f7fa;
+		image-rendering: pixelated;
+		transform: scale(2);
+		transform-origin: center center;
+	}
+
+	@font-face {
+		font-family: "LcdSolid";
+		src: url("./LcdSolid.ttf") format("truetype");
+		font-weight: normal;
+		font-style: normal;
 	}
 </style>
 </head>
@@ -27,20 +39,29 @@
 		import { HUD } from "./hud.js";
 		import { robo, updateRobo, drawRobo } from "./robot.js";
 		import * as Lixos from "./lixos.js";
-		// parte principal
+
+		// canvas
 		const canvas = document.getElementById("gameCanvas");
 		const ctx = canvas.getContext("2d");
+		const W = canvas.width;
+		const H = canvas.height;
 
-	const W = canvas.width;
-	const H = canvas.height;
+		// céu
+		const bg = new Image();
+		bg.src = "./bg.png";
+
+		//caixote
+		const binImg = new Image();
+		const binFrontImg = new Image();
+		binImg.src = "./sprites/bin.png";
+		binFrontImg.src = "./sprites/binFront.png";
 
 		// lixo
 		const chuvaLista = [];
 		let spawnTimer = 0;
 
-		// Variáveis para o Game Loop e DeltaTime
+		// delta time
 		let lastTime = 0;
-		let deltaTime = 0;
 
 		function criarLixo() {
 			const x = Math.random() * (W - 100);
@@ -52,102 +73,97 @@
 			chuvaLista.push(obj);
 		}
 
-	// ATUALIZADO: Calcula 2 pontos por objeto depositado
-	function porNoLixo() {
-		const binX = W - 80;
-		const binY = H - 100;
+		function porNoLixo() {
+			const binX = W - 80;
+			const binY = H - 100;
 
-		if (robo.x + robo.w > binX && robo.x < binX + 60) {
-			let lixoDepositado = 0; // Conta o número de lixos a serem depositados
+			if (robo.x + robo.w > binX && robo.x < binX + 60) {
+				let lixoDepositado = 0;
 
-			for (const obj of chuvaLista) {
-				if (obj.onRobot) {
-					obj.onRobot = false;
-					obj.jumpingToBin = true;
-					obj.jumpProgress = 0;
-					lixoDepositado++;
+				for (const obj of chuvaLista) {
+					if (obj.onRobot) {
+						obj.onRobot = false;
+						obj.jumpingToBin = true;
+						obj.jumpProgress = 0;
+						lixoDepositado++;
+					}
+				}
+
+				if (lixoDepositado > 0) {
+					HUD.adicionarPontos(lixoDepositado * 2);
+				}
+			}
+		}
+
+		function render(timestamp) {
+			// calcular deltaTime
+			if (!lastTime) lastTime = timestamp;
+			const deltaTime = timestamp - lastTime;
+			lastTime = timestamp;
+
+			// verificar fim de jogo
+			if (HUD.jogoTerminado) {
+				HUD.desenhar(ctx);
+				return; // parar
+			}
+
+			// fundo
+			ctx.drawImage(bg,0,0);
+
+			// caixote de lixo
+			ctx.drawImage(binImg, W - 80, H - 106);
+
+			// cair lixo ocasionalmente
+			spawnTimer++;
+			if (spawnTimer > 100) {
+				criarLixo();
+				spawnTimer = 0;
+			}
+
+			// atualizar robô
+			updateRobo(canvas.width, deltaTime);
+
+			// atualizar chuva
+			for (let i = chuvaLista.length - 1; i >= 0; i--) {
+				const obj = chuvaLista[i];
+				obj.update(robo, W - 50, H - 100);
+				obj.draw(ctx);
+
+				// se cair ao chão
+				if (obj.y + obj.h > H - 40) {
+					HUD.perderVida();
+					chuvaLista.splice(i, 1);
 				}
 			}
 
-			// Adiciona 2 pontos por cada lixo depositado
-			if (lixoDepositado > 0) {
-				HUD.adicionarPontos(lixoDepositado * 2);
+			ctx.drawImage(binFrontImg, W - 80, H - 106);
+
+			// verificar lixo no caixote
+			porNoLixo();
+
+			// quanto mais peso, mais lento o robô
+			const totalWeight = chuvaLista
+				.filter(o => o.onRobot)
+				.reduce((sum, o) => sum + o.weight, 0);
+			robo.speed = 6 / (1 + totalWeight * 0.075);
+
+			// remover lixo posto no caixote
+			for (let i = chuvaLista.length - 1; i >= 0; i--) {
+				if (chuvaLista[i].collected) chuvaLista.splice(i, 1);
 			}
-		}
-	}
 
+			// desenhar robô
+			drawRobo(ctx);
 
-	function render(timestamp) {
-		// CÁLCULO DO DELTATIME
-		if (!lastTime) lastTime = timestamp;
-		deltaTime = (timestamp - lastTime) / 1000; // Tempo em segundos
-		lastTime = timestamp;
-
-		// NOVO: Para o jogo se tiver terminado
-		if (HUD.jogoTerminado) {
-			// Apenas desenha o HUD e espera pelo botão de reiniciar
+			// Atualizar e desenhar HUD
+			HUD.atualizar(deltaTime);
 			HUD.desenhar(ctx);
-			// mostrarBotaoReiniciar();
-			return;
+
+			// Próxima frame
+			requestAnimationFrame(render);
 		}
-
-
-		// fundo
-		ctx.fillStyle = "#b3e5fc";
-		ctx.fillRect(0, 0, W, H);
-
-		// chão
-		ctx.fillStyle = "#81c784";
-		ctx.fillRect(0, H - 40, W, 40);
-
-		// caixote de lixo
-		ctx.fillStyle = "#4caf50";
-		ctx.fillRect(W - 80, H - 100, 60, 60);
-
-		// cair lixo ocasionalmente
-		spawnTimer++;
-		if (spawnTimer > 100) {
-			criarLixo();
-			spawnTimer = 0;
-		}
-
-		updateRobo(W);
-		drawRobo(ctx);
-		porNoLixo();
-
-		// mover e atualizar chuva
-		for (let i = chuvaLista.length - 1; i >= 0; i--) {
-			const obj = chuvaLista[i];
-
-			obj.update(robo, W - 50, H - 100);
-			obj.draw(ctx);
-
-			// NOVO: Verifica se o lixo caiu para fora do ecrã
-			if (obj.y + obj.h > H - 40) {
-
-				HUD.perderVida();
-				chuvaLista.splice(i, 1); // Remove o lixo
-			}
-		}
-
-		// quanto mais peso, mais lento o robô
-		const totalWeight = chuvaLista
-			.filter(o => o.onRobot)
-			.reduce((sum, o) => sum + o.weight, 0);
-		robo.speed = 6 / (1 + totalWeight * 0.075);
-
-		// remover lixo posto no caixote
-		for (let i = chuvaLista.length - 1; i >= 0; i--) {
-			if (chuvaLista[i].collected) chuvaLista.splice(i, 1);
-		}
-
-		// ATUALIZAÇÃO E DESENHO DO HUD
-		HUD.atualizar(deltaTime);
-		HUD.desenhar(ctx);
 
 		requestAnimationFrame(render);
-	}
-	render();
-</script>
+	</script>
 </body>
 </html>
