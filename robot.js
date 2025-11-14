@@ -40,12 +40,12 @@ export function updateRobo(canvasWidth, deltaTime) {
 	robo.moving = false;
 
 	// movimento
-	if (keys["ArrowLeft"]) {
+	if (keys["ArrowLeft"] || keys["a"]) {
 		robo.x -= robo.speed;
 		robo.dir = "left";
 		robo.moving = true;
 	}
-	if (keys["ArrowRight"]) {
+	if (keys["ArrowRight"] || keys["d"]) {
 		robo.x += robo.speed;
 		robo.dir = "right";
 		robo.moving = true;
